@@ -20,35 +20,51 @@ export const generateRows = async (
 ) => {
   const rows: Rows = [];
   let cellIndex = 0;
+  const BATCH_SIZE = 50000; // larger batch for fewer setRows calls
+
   for (let rowIdx = 0; rowIdx < rowCount; rowIdx++) {
-    if (rowIdx % 10000 === 0 && isTimeToYield("background")) {
-      await yieldControl("background"); // so we don't drop frames generating rows
+    // Yield control every BATCH_SIZE rows to keep UI responsive
+    if (rowIdx % BATCH_SIZE === 0 && isTimeToYield("background")) {
+      await yieldControl("background");
       grid.rowManager.setRows(rows, true);
     }
+
     const cells: Cell[] = [{ id: -rowIdx - 1, v: String(rowIdx + 1) }];
+
+    // Precompute random values for the row
+    const firstName = FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)];
+    const lastName = LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)];
+    const age = Math.floor(Math.random() * (99 - 18 + 1)) + 18;
+
     for (let cellIdx = 0; cellIdx < N_COLS; cellIdx++) {
       let value: string | number;
-      if (cellIdx === 0) {
-        value = FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)];
-      } else if (cellIdx === 1) {
-        value = LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)];
-      } else if (cellIdx === 2) {
-        value = Math.floor(Math.random() * (99 - 18 + 1)) + 18;
-      } else {
-        value = Math.round(skewedRandom() * (Math.random() * 1000000));
+
+      switch (cellIdx) {
+        case 0:
+          value = firstName;
+          break;
+        case 1:
+          value = lastName;
+          break;
+        case 2:
+          value = age;
+          break;
+        default:
+          value = Math.round(skewedRandom() * (Math.random() * 1_000_000));
       }
-      cells.push({
-        id: cellIndex,
-        v: value,
-      });
-      cellIndex += 1;
+
+      cells.push({ id: cellIndex++, v: value });
     }
+
     rows.push({ id: rowIdx, cells } satisfies Row);
   }
+
+  // Final yield to ensure smooth UI
   await yieldControl("background");
   grid.rowManager.setRows(rows);
   cb();
 };
+
 
 export const COLUMNS = [
   "Index",
