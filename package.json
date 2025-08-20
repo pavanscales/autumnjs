@@ -1,0 +1,20 @@
+{
+  "name": "test",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "ts": "tsc --watch --noEmit",
+    "predeploy": "cd example && npm run build"
+  },
+  "devDependencies": {
+    "typescript": "5.0.2",
+    "vite": "4.3.2"
+  },
+  "dependencies": {
+    "@types/timsort": "^0.3.1",
+    "apache-arrow": "^13.0.0",
+    "fast-sort": "^3.4.0",
+    "main-thread-scheduling": "8.0.0",
+    "timsort": "^0.3.0"
+  }
+}
