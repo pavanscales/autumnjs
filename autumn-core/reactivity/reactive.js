@@ -1,11 +1,15 @@
 // /autmn-core/reactivity/reactive.js
-// GOD-TIER REACTIVE HELPERS
-// High-level API on top of Signal/Computed
+// UNIVERSE-LEVEL FRONTEND REACTIVE HELPERS
+// High-level reactive engine built on top of Signal/Computed
+// DAG-safe, lazy, batched, memory-safe, transactions-ready
 
-import { Signal, Effect, Computed, batch as coreBatch } from './signal.js';
+import { Signal, Computed, Effect, batch as coreBatch } from './signal.js';
 
 let CURRENT_DERIVED = null;
 
+// ====================
+// DERIVED EFFECT WITH FULL DAG SAFETY
+// ====================
 class DerivedEffect extends Effect {
   constructor(fn, options = {}) {
     super(fn, options);
@@ -18,7 +22,7 @@ class DerivedEffect extends Effect {
   }
 
   _run() {
-    // Cleanup previous deps not tracked this run
+    // Remove stale dependencies
     for (const s of this._depsSnapshot) {
       if (!this.deps.has(s)) s._subs.delete(this);
     }
@@ -28,7 +32,7 @@ class DerivedEffect extends Effect {
 }
 
 // ====================
-// REACTIVE WRAPPERS
+// OBJECT REACTIVITY
 // ====================
 export function reactive(obj) {
   if (typeof obj !== 'object' || obj === null) return obj;
@@ -57,7 +61,7 @@ export function reactive(obj) {
 }
 
 // ====================
-// DERIVED COMPUTED
+// DERIVED COMPUTED SIGNALS
 // ====================
 export function derived(fn) {
   const comp = new Computed(() => {
@@ -72,21 +76,21 @@ export function derived(fn) {
 }
 
 // ====================
-// WATCH EFFECT
+// WATCH / EFFECT HELPER
 // ====================
 export function watch(fn, options = {}) {
   return new DerivedEffect(fn, options);
 }
 
 // ====================
-// TRANSACTIONAL BATCH
+// TRANSACTIONAL BATCHING
 // ====================
 export function batch(fn) {
   coreBatch(fn);
 }
 
 // ====================
-// HELPERS
+// UTILITY HELPERS
 // ====================
 export function unwrap(obj) {
   if (obj instanceof Signal || obj instanceof Computed) return obj.get();
@@ -103,7 +107,7 @@ export function mapSignals(obj, fn) {
 }
 
 // ====================
-// DEV METRICS
+// DEV / METRICS
 // ====================
 export function effectStats(effect) {
   if (effect instanceof DerivedEffect) {
@@ -124,3 +128,4 @@ export function signalStats(signal) {
 // EXPORTS
 // ====================
 export { Signal, Computed, Effect };
+export { reactive, derived, watch, batch, unwrap, mapSignals };
