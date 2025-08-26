@@ -11,7 +11,7 @@ export const setupFPS = () => {
     top: "50px",
     left: "50px",
     zIndex: "9999",
-    cursor: "move",
+
     userSelect: "none",
     borderRadius: "8px",
     overflow: "hidden",

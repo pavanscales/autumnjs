@@ -1,71 +1,90 @@
-# Autmn.js : The Ultimate No-Bottleneck Frontend Framework
+⚡ Autmn.js — Deterministic High-Performance Frontend Engine
+
+Autmn.js = frame-perfect, GPU-aware, multi-threaded, deterministic. Handles millions of rows, real-time updates, zero frame drops.
+
+[Application Layer]
+- UI: grids, tables, inputs
+- Hot-swappable reactive components
+- API <0.5ms async
+-> 1M rows init/render ~3ms, scroll 40 rows/frame ~70fps
+
+▼
+
+[Signals]
+- DAG atomic signals
+- Lazy caches
+-> Only recompute changed nodes, deterministic
+
+▼
+
+[Scheduler]
+- Input → Animation → Render → BG
+- Task prioritization
+-> 120ms filter + sort every 300ms
+
+▼
+
+[Renderer]
+- Atomic DOM commits, GPU transforms
+- Off-thread diffing
+- Custom virtualization
+-> Smooth scroll/filter/sort on Acer ~70fps
+
+▼
+
+[Memory]
+- Object pools, ephemeral reuse
+- SharedArrayBuffers → zero-copy
+-> Minimal GC, predictable footprint
+
+▼
+
+[Platform]
+- DOM / Canvas / WebGPU / Native
+- Precise input mapping
+-> Fully extensible, native-level speed
 
 
-Autmn.js is a **next-generation full-stack frontend framework**, engineered for **extreme performance, deterministic execution, and full observability**. Every part of the system is **mathematically and browser-optimized**, making it ideal for **massive-scale applications, interactive dashboards, real-time UIs, and high-performance web tables**.
+⚡ Core Mechanics
 
----
+Signals → recompute only changed nodes
 
-## Web Table Highlights
-- **Multithreaded web table** capable of **120fps** while sorting, filtering, and scrolling simultaneously  
-- **Display millions of rows at O(1)**, limited only by browser RAM  
-- **Zero frame drops** during filtering, sorting, or fast scrolling  
-- **Posting updates & soon video walkthrough**: [X / Infinterenders](https://x.com/infinterenders)  
+Scheduler → frame-perfect execution
 
----
+GPU/ SIMD → smooth animations
 
-## Capabilities
-- Multithread sorting/filtering using a **SharedArrayBuffer**  
-- **DAG-driven reactive signals** → only recompute what actually changes  
-- **Deterministic scheduler lanes** → Input → Animation → Rendering → Background  
-- **GPU-accelerated layout & SIMD math** → smooth animations and transforms  
-- **Hydration-free SSR** → instant first interaction  
-- **Memory pools & ephemeral reuse** → minimal GC, predictable memory footprint  
-- **Cross-platform drivers** → DOM, Canvas, WebGPU, Native  
-- **Full observability** → Graph inspector, scheduler traces, metrics dashboard  
+SSR → instant first click
 
----
+Memory pools → minimal GC
 
-## Technical Details (Web Table + General)
-- Uses **SharedArrayBuffer** to store order/filtering of rows, computed in a **Web Worker off-thread**  
-- Reuses all parts of the **DOM tree**  
-- **Custom event loop** prioritizes tasks → never drops a frame, even when filtering millions of rows  
-- **Non-passive scrolling** → rows never “appear late” while scrolling  
-- **Custom virtualization** → not limited by browser 15 million pixel div height limit  
-- **Mobile-optimized** → scrolls at 60fps even on older phones  
+Cross-platform → DOM, Canvas, WebGPU, Native
 
----
+Observability → scheduler + metrics + graph inspector
 
-## Performance Benchmarks (1 Million Rows, M2 Max Pro)
 
-| Benchmark                                 | Score  |
-| ----------------------------------------- | ------ |
-| Scroll 40 rows every frame                 | 120fps |
-| Filtering                                  | 200ms  |
-| Time to initialize grid and show rows      | 1.5ms  |
-| Filter & sort simultaneously every 300ms  | 120fps |
+🔧 Technical Tricks
 
-- Zero-copy data types for **minimal memory overhead**  
+SharedArrayBuffer + WebWorker → off-thread sort/filter
 
----
+DOM reuse → no rebuilds
 
-## Future / TODO
-- Optimize **iPhone Safari memory limits** → disable multithreading where necessary  
-- Expand **synthetic event-loop** → include scrolling & rendering of cell contents  
-- Reduce **GC overhead** → reuse ephemeral cell classes  
-- Ensure **scrollbar behavior** is relative to zoom level  
-- Full **column sort/filter support**, not just the second column  
-- **Column resizing & advanced custom cells**  
-- Ensure **rows are correctly ordered** for text selection  
-- Add **video walkthrough & extended benchmark suite**  
+Custom event loop → deterministic, frame-perfect
 
----
+Non-passive scrolling → consistent row visibility
 
-## Why Autmn.js?
-Autmn.js is engineered for **extreme real-world performance**. It is the frontend framework that **makes legacy frameworks obsolete**, combining:  
+Custom virtualization → bypass browser pixel limits
 
-- **Mathematical precision** in updates  
-- **CS-driven scheduling & memory management**  
-- **Browser-aware optimization**  
-- **Full-stack readiness with backend integration**  
+Mobile optimized → 60fps even on low-end devices
 
-> **Autmn.js** is for engineers who demand **deterministic, high-performance frontend infrastructure** — the framework that **redefines “fast” for humans and machines alike**.
+⚡ Acer Performance (1M Rows)
+Action	Acer Score
+Generate rows	~12ms
+Init & render 1M rows	~3ms
+Filter	~250ms
+Sort	~300ms
+Scroll 40 rows/frame	~70fps
+Filter + sort every 300ms	~70fps
+
+Zero-copy memory → minimal footprint
+
+Deterministic execution → predictable, no surprises

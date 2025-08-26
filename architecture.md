@@ -32,7 +32,7 @@
 │ - Custom virtualization → exceeds browser pixel limits       │
 │ - Zero frame drops while scrolling, filtering, or sorting    │
 └───────────────────────────────────────────────────────────────┘
-                   │
+                   │s
                    ▼
 ┌───────────────────────────────────────────────────────────────┐
 │                   Data & Memory Layer                          │
