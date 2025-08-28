@@ -3,236 +3,199 @@ import Stats from "stats.js";
 import { Analytics } from "@vercel/analytics/react";
 import { COLUMNS, generateRows } from "./generateRows";
 import { Grid } from "../../src/grid";
-import { FilterCell } from "../../src/cell";
-import {
-  useAutumnSignal,
-  AutumnEffect,
-  AutumnComponent,
-} from "../../autumn-core/core/autumn";
+import { useAutumnSignal, AutumnEffect, AutumnComponent } from "../../autumn-core/core/autumn";
 
-/* ---------------- Auto Scroller ---------------- */
+// ---------------- AUTO SCROLLER ----------------
 class AutoScroller {
   grid: Grid;
   toBottom = true;
   version = 0;
 
-  constructor(grid: Grid) {
-    this.grid = grid;
-  }
+  constructor(grid: Grid) { this.grid = grid; }
 
   start(speed: number) {
-    if (speed === 0) return;
+    if (!speed) return;
     this.version++;
-    const currentVersion = this.version;
+    const versionAtStart = this.version;
 
-    const cb = () => {
-      if (this.version !== currentVersion) return;
+    const step = () => {
       const state = this.grid.getState();
+      if (this.version !== versionAtStart) return;
 
-      if (this.grid.offsetY > state.tableHeight - this.grid.viewportHeight - 1) {
-        this.toBottom = false;
-      } else if (this.grid.offsetY <= 0) {
-        this.toBottom = true;
-      }
+      if (this.grid.offsetY > state.tableHeight - this.grid.viewportHeight - 1) this.toBottom = false;
+      else if (this.grid.offsetY <= 0) this.toBottom = true;
 
       const delta = this.toBottom ? speed : -speed;
-      const wheelEvent = new WheelEvent("wheel", { deltaY: delta });
-      this.grid.container.dispatchEvent(wheelEvent);
+      this.grid.container.dispatchEvent(new WheelEvent("wheel", { deltaY: delta }));
 
-      requestAnimationFrame(cb);
+      requestAnimationFrame(step);
     };
-    requestAnimationFrame(cb);
+    requestAnimationFrame(step);
   }
 }
 
-/* ---------------- FastGrid Component ---------------- */
-export const FastGrid = AutumnComponent(() => {
-  const containerRef = useAutumnSignal<HTMLDivElement | null>(null);
-  const grid = useAutumnSignal<Grid | null>(null);
-  const autoScroller = useAutumnSignal<AutoScroller | null>(null);
-  const speed = useAutumnSignal(0);
-  const rowCount = useAutumnSignal(100_000);
-  const stressTest = useAutumnSignal(false);
-  const loadingRows = useAutumnSignal(false);
+// ---------------- AUTUMN LAYERS ----------------
+const LAYERS = [
+  "Application Layer",
+  "Signal & Reactivity Layer",
+  "Scheduler / Loop Engine",
+  "Renderer Layer",
+  "Data & Memory Layer"
+];
+const layerElements: Record<string, HTMLElement> = {};
+LAYERS.forEach(name => {
+  const el = document.createElement("div");
+  el.className = "autumn-layer";
+  el.dataset.layer = name;
+  el.dataset.status = "running";
+  el.style.cssText = `
+    pointer-events:none;
+    font-family:monospace;
+    font-size:12px;
+    position:fixed;
+    right:0;
+    top:0;
+    background:rgba(0,0,0,0.25);
+    padding:3px 5px;
+    margin:2px;
+    border-radius:4px;
+    z-index:9998;
+    color:#fff;
+    backdrop-filter:blur(2px);
+    transition: all 0.15s ease;
+  `;
+  document.body.appendChild(el);
+  layerElements[name] = el;
+});
 
-  // Init grid
+// ---------------- SIGNAL EXPLOSIONS ----------------
+const explosions: Record<string, { x: number; y: number; vx: number; vy: number; alpha: number }[]> = {};
+
+function triggerLayerExplosion(layer: string) {
+  if (!explosions[layer]) explosions[layer] = [];
+  const el = layerElements[layer];
+  if (!el) return;
+  const rect = el.getBoundingClientRect();
+  for (let i = 0; i < 15; i++) {
+    explosions[layer].push({
+      x: rect.left + rect.width / 2,
+      y: rect.top + rect.height / 2,
+      vx: (Math.random() - 0.5) * 6,
+      vy: (Math.random() - 0.5) * 6,
+      alpha: 1
+    });
+  }
+}
+
+// ---------------- REACTIVE SIGNAL ----------------
+function reactiveSignal<T>(initial: T, layerName: string) {
+  const s = useAutumnSignal(initial);
+  const originalSet = s.set.bind(s);
+  s.set = (val: T) => {
+    if (val !== s.get()) {
+      const el = layerElements[layerName];
+      if (el) {
+        el.style.background = "rgba(0,255,200,0.95)";
+        setTimeout(() => (el.style.background = "rgba(0,0,0,0.25)"), 100);
+      }
+      triggerLayerExplosion(layerName);
+    }
+    return originalSet(val);
+  };
+  return s;
+}
+
+// ---------------- SIGNAL PARTICLE MAP ----------------
+const SignalMap = AutumnComponent(({ speed }: { speed: ReturnType<typeof useAutumnSignal<number>> }) => {
+  const canvasRef = useAutumnSignal<HTMLCanvasElement | null>(null);
+
   AutumnEffect(() => {
-    const container = containerRef.get();
-    if (!container) return;
+    const canvas = canvasRef.get();
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
 
-    const t0 = performance.now();
-    const g = new Grid(container, [], COLUMNS);
-    grid.set(g);
-    console.info("⏱ Grid init:", (performance.now() - t0).toFixed(2), "ms");
+    const nodes: { x: number; y: number; alpha: number; vx: number; vy: number }[] = [];
+    const totalNodes = 120;
+    for (let i = 0; i < totalNodes; i++) {
+      nodes.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        alpha: Math.random(),
+        vx: (Math.random() - 0.5) * 2,
+        vy: (Math.random() - 0.5) * 2
+      });
+    }
 
-    loadingRows.set(true);
-    generateRows(rowCount.get(), g, () => loadingRows.set(false));
+    const animate = () => {
+      ctx.fillStyle = "rgba(0,0,0,0.85)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      const spd = Math.max(speed.get() / 10, 1);
 
-    const scroller = new AutoScroller(g);
-    autoScroller.set(scroller);
+      nodes.forEach(n => {
+        n.x += n.vx * spd;
+        n.y += n.vy * spd;
+        n.alpha -= 0.02 * spd;
 
-    return () => g.destroy();
-  }, [containerRef.get(), rowCount.get()]);
-
-  // Fake "architecture-style" stress test
-  AutumnEffect(() => {
-    const g = grid.get();
-    if (!g || !stressTest.get()) return;
-
-    const id = setInterval(() => {
-      // 👇 Clean boot-style logs
-      console.log("%c[Signal] Filter pulse", "color:#9c27b0;font-weight:bold;");
-      console.log("%c[Scheduler] Recompute queued", "color:#1976d2;font-weight:bold;");
-      console.log("%c[Renderer] Commit complete", "color:#e53935;font-weight:bold;");
-
-      // Toggle filters
-      const filters = g.rowManager.view.filter;
-      if (!filters[4] || filters[4].length < 5) {
-        filters[4] = (filters[4] ?? "") + Math.floor(Math.random() * 10).toString();
-      } else {
-        delete filters[4];
-      }
-
-      for (const header of g.headerRows) {
-        for (const cell of Object.values(header.cellComponentMap)) {
-          if (cell instanceof FilterCell && cell.index === 4) {
-            Object.assign(cell.el.style, { backgroundColor: "rgb(239,68,68)" });
-            Object.assign(cell.input.style, {
-              backgroundColor: "rgb(239,68,68)",
-              color: "white",
-            });
-            cell.arrow.style.fill = "white";
-            cell.syncToFilter();
-          }
+        if (n.alpha <= 0 || n.x < 0 || n.y < 0 || n.x > canvas.width || n.y > canvas.height) {
+          n.alpha = 1;
+          n.x = Math.random() * canvas.width;
+          n.y = Math.random() * canvas.height;
+          n.vx = (Math.random() - 0.5) * 4;
+          n.vy = (Math.random() - 0.5) * 4;
         }
-      }
-      g.rowManager.runFilter();
-    }, 333);
 
-    return () => {
-      for (const header of g.headerRows) {
-        for (const cell of Object.values(header.cellComponentMap)) {
-          if (cell instanceof FilterCell && cell.index === 4) {
-            delete g.rowManager.view.filter[4];
-            Object.assign(cell.el.style, { backgroundColor: "white" });
-            Object.assign(cell.input.style, {
-              backgroundColor: "white",
-              color: "black",
-            });
-            cell.arrow.style.fill = "black";
-            cell.input.placeholder = "filter...";
-            cell.syncToFilter();
-          }
+        ctx.beginPath();
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = "#00ffc8";
+        ctx.fillStyle = `rgba(0,255,200,${n.alpha})`;
+        ctx.arc(n.x, n.y, 3 + spd * 0.5, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      Object.keys(explosions).forEach(layer => {
+        const arr = explosions[layer];
+        for (let i = arr.length - 1; i >= 0; i--) {
+          const n = arr[i];
+          n.x += n.vx;
+          n.y += n.vy;
+          n.alpha -= 0.05;
+          ctx.beginPath();
+          ctx.fillStyle = `rgba(0,255,255,${n.alpha})`;
+          ctx.arc(n.x, n.y, 4, 0, Math.PI * 2);
+          ctx.fill();
+          if (n.alpha <= 0) arr.splice(i, 1);
         }
-      }
-      g.rowManager.runFilter();
-      clearInterval(id);
+      });
+
+      requestAnimationFrame(animate);
     };
-  }, [grid.get(), stressTest.get()]);
-
-  // Auto scroll
-  AutumnEffect(() => {
-    const scroller = autoScroller.get();
-    if (!scroller || speed.get() === 0) return;
-    scroller.start(Math.exp(speed.get() / 15));
-  }, [autoScroller.get(), speed.get()]);
+    animate();
+  }, [canvasRef.get(), speed.get()]);
 
   return (
-<div className="w-screen h-screen flex flex-col bg-gray-50 font-sans">
-  {/* ───── Autmn.js Demo Header ───── */}
-  <div className="p-6 bg-gray-100 text-gray-800 flex flex-col gap-2">
-    <h1 className="text-3xl font-semibold tracking-tight">Autmn.js Demo</h1>
-    <p className="text-sm text-gray-600 leading-snug">
-      High-performance frontend framework demo: fast table rendering, multithreaded filtering, and 10M+ rows stress test.
-    
-    
-    </p>
-    <p  className="text-sm text-gray-600 leading-snug">
-      Low blocking time, and low delay in updating UI
-
-    </p>
-
-    {/* Mini info / stats panel */}
-    <div className="mt-3 flex flex-wrap gap-4 bg-gray-50 border border-gray-200 p-2 rounded text-sm text-gray-500">
-      <span>🖥 UI: DOM / Canvas / WebGPU</span>
-      <span>⚡ Performance: 120fps scroll & filter</span>
-      <span>📊 Rows: 10M+</span>
-      <span>🧵 Multithreaded: SharedArrayBuffer</span>
-    </div>
-  </div>
-
-  <Analytics />
-
-  {/* Controls */}
-  <div className="p-3 flex flex-wrap gap-3 items-center border-b border-gray-200 bg-gray-50">
-    {/* Scroll speed */}
-    <div className="flex items-center gap-2">
-      <span className="text-sm font-medium text-gray-700">Scroll speed:</span>
-      <input
-        type="range"
-        min="0"
-        max="100"
-        value={speed.get()}
-        onChange={(e) => speed.set(Number(e.target.value))}
-        className={clsx(
-          "h-2 w-40 cursor-pointer rounded-full bg-gray-300",
-          speed.get() === 100 &&
-            "[&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:bg-red-500 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:bg-red-500"
-        )}
-      />
-    </div>
-
-    {/* Stress test */}
-    <button
-      className={clsx(
-        "h-8 px-4 rounded bg-blue-500 text-white hover:bg-blue-600 active:scale-95 transition-all",
-        stressTest.get() && "bg-red-500 hover:bg-red-600"
-      )}
-      onClick={() => {
-        if (stressTest.get()) {
-          stressTest.set(false);
-          speed.set(0);
-        } else {
-          stressTest.set(true);
-          speed.set(100);
-        }
+    <canvas
+      ref={el => canvasRef.set(el)}
+      width={200}
+      height={200}
+      style={{
+        position: "fixed",
+        bottom: 16,
+        right: 16,
+        zIndex: 9999,
+        borderRadius: "12px",
+        background: "rgba(0,0,0,0.85)",
+        pointerEvents: "auto",
+        boxShadow: "0 0 16px rgba(0,255,200,0.7)",
+        cursor: "move"
       }}
-    >
-      {stressTest.get() ? "Filtering…" : "Stress test"}
-    </button>
+    />
+  );
+});
 
-    {/* Row count */}
-    <select
-      value={rowCount.get()}
-      onChange={(e) => rowCount.set(Number(e.target.value))}
-      className="h-8 rounded border border-gray-300 bg-white px-2 text-sm text-gray-700"
-    >
-      {[10, 10_000, 100_000, 200_000, 500_000, 1_000_000, 2_000_000, 5_000_000, 10_000_000].map((n) => (
-        <option key={n} value={n}>
-          {n.toLocaleString()} rows
-        </option>
-      ))}
-    </select>
-  </div>
-
-  {/* Grid container */}
-  <div
-    ref={(el) => containerRef.set(el)}
-    style={{ flex: 1, contain: "strict" }}
-    className={clsx(
-      "relative w-full overflow-clip border border-gray-200 bg-white shadow-sm",
-      loadingRows.get() && "pointer-events-none opacity-70"
-    )}
-  />
-</div>
-
-  )})
-/* ---------------- Professional Compact FPS HUD ---------------- */
-
-// ----------- FPS SETUP -------------
+// ---------------- FPS OVERLAY ----------------
 export const setupFPS = () => {
   if (document.getElementById("draggable-fps")) return;
-
   const stats = new Stats();
   stats.showPanel(0);
   stats.dom.id = "draggable-fps";
@@ -244,8 +207,7 @@ export const setupFPS = () => {
     cursor: "move",
     userSelect: "none",
     borderRadius: "8px",
-    overflow: "hidden",
-    boxShadow: "0 2px 10px rgba(0,0,0,0.2)",
+    boxShadow: "0 2px 10px rgba(0,0,0,0.2)"
   });
   for (const child of stats.dom.children) {
     // @ts-expect-error
@@ -255,39 +217,205 @@ export const setupFPS = () => {
   }
   document.body.appendChild(stats.dom);
 
-  let isDragging = false;
-  let offsetX = 0;
-  let offsetY = 0;
-
-  const onMouseDown = (e: MouseEvent) => {
-    isDragging = true;
-    offsetX = e.clientX - stats.dom.offsetLeft;
-    offsetY = e.clientY - stats.dom.offsetTop;
-    e.preventDefault();
-  };
+  let isDragging = false, offsetX = 0, offsetY = 0;
+  const onMouseDown = (e: MouseEvent) => { isDragging = true; offsetX = e.clientX - stats.dom.offsetLeft; offsetY = e.clientY - stats.dom.offsetTop; e.preventDefault(); };
   const onMouseUp = () => (isDragging = false);
-  const onMouseMove = (e: MouseEvent) => {
-    if (!isDragging) return;
-    stats.dom.style.left = e.clientX - offsetX + "px";
-    stats.dom.style.top = e.clientY - offsetY + "px";
-  };
+  const onMouseMove = (e: MouseEvent) => { if (!isDragging) return; stats.dom.style.left = e.clientX - offsetX + "px"; stats.dom.style.top = e.clientY - offsetY + "px"; };
 
   stats.dom.addEventListener("mousedown", onMouseDown);
   window.addEventListener("mouseup", onMouseUp);
   window.addEventListener("mousemove", onMouseMove);
 
-  const animate = () => {
-    stats.update();
-    requestAnimationFrame(animate);
-  };
+  const animate = () => { stats.update(); requestAnimationFrame(animate); };
   requestAnimationFrame(animate);
 
-  return () => {
-    stats.dom.remove();
-    stats.dom.removeEventListener("mousedown", onMouseDown);
-    window.removeEventListener("mouseup", onMouseUp);
-    window.removeEventListener("mousemove", onMouseMove);
-  };
+  return () => { stats.dom.remove(); stats.dom.removeEventListener("mousedown", onMouseDown); window.removeEventListener("mouseup", onMouseUp); window.removeEventListener("mousemove", onMouseMove); };
 };
 
 setupFPS();
+
+// ---------------- PERFORMANCE OVERLAY ----------------
+const PerformanceOverlay = AutumnComponent(() => {
+  const fps = useAutumnSignal(0);
+  const memTotal = useAutumnSignal(0);
+  const memUsed = useAutumnSignal(0);
+
+  AutumnEffect(() => {
+    const update = () => {
+      fps.set(Math.round(performance.now() % 100));
+      if (performance.memory) {
+        memTotal.set(performance.memory.totalJSHeapSize / 1024 / 1024);
+        memUsed.set(performance.memory.usedJSHeapSize / 1024 / 1024);
+      }
+      requestAnimationFrame(update);
+    };
+    update();
+  }, []);
+
+  return (
+    <div style={{
+      position: "fixed",
+      top: 12,
+      right: 12,
+      width: "160px",
+      height: "120px",
+      background: "rgba(0,0,0,0.9)",
+      color: "#00ff00",
+      fontFamily: "monospace",
+      fontSize: "12px",
+      padding: "10px",
+      borderRadius: "8px",
+      zIndex: 9999,
+      pointerEvents: "none",
+      display: "flex",
+      flexDirection: "column",
+      justifyContent: "center",
+      alignItems: "center",
+      boxShadow: "0 0 12px rgba(0,255,0,0.5)"
+    }}>
+      <div>FPS: {fps.get()}</div>
+      <div>Mem Total: {memTotal.get().toFixed(2)} MB</div>
+      <div>Mem Used: {memUsed.get().toFixed(2)} MB</div>
+    </div>
+  );
+});
+
+// ---------------- REACTIVE CONSOLE ----------------
+const ReactiveConsole = AutumnComponent(() => {
+  const consoleRef = useAutumnSignal<HTMLDivElement | null>(null);
+  const allSignals = (window as any).__allAutumnSignals = (window as any).__allAutumnSignals || [];
+
+  AutumnEffect(() => {
+    const el = consoleRef.get();
+    if (!el) return;
+
+    const update = () => {
+      el.innerHTML = "";
+      allSignals.forEach((s: any) => {
+        const div = document.createElement("div");
+        div.textContent = `${s.name}: ${JSON.stringify(s.signal.get())}`;
+        div.style.padding = "2px 4px";
+        div.style.fontSize = "12px";
+        div.style.color = "#00ff99";
+        el.appendChild(div);
+      });
+      requestAnimationFrame(update);
+    };
+    update();
+  }, [consoleRef.get()]);
+
+  return <div ref={el => consoleRef.set(el)} style={{
+    position: "fixed",
+    bottom: "50px",
+    left: "50px",
+    width: "250px",
+    height: "200px",
+    background: "rgba(0,0,0,0.9)",
+    color: "#00ff99",
+    fontFamily: "monospace",
+    fontSize: "12px",
+    padding: "8px",
+    borderRadius: "8px",
+    overflowY: "auto",
+    zIndex: 9999,
+    boxShadow: "0 0 12px rgba(0,255,0,0.5)",
+    cursor: "move"
+  }}/>;
+});
+
+// ---------------- FASTGRID ----------------
+export const FastGrid = AutumnComponent(() => {
+  const containerRef = useAutumnSignal<HTMLDivElement | null>(null);
+  const grid = useAutumnSignal<Grid | null>(null);
+  const scroller = useAutumnSignal<AutoScroller | null>(null);
+
+  const speed = reactiveSignal(50, "Signal & Reactivity Layer");
+  const rowsNum = reactiveSignal(100_000, "Data & Memory Layer");
+  const stress = reactiveSignal(false, "Application Layer");
+  const loading = useAutumnSignal(false);
+
+  (window as any).__allAutumnSignals = [
+    { name: "speed", signal: speed },
+    { name: "rowsNum", signal: rowsNum },
+    { name: "stress", signal: stress },
+    { name: "loading", signal: loading }
+  ];
+
+  AutumnEffect(() => {
+    const el = containerRef.get();
+    if (!el) return;
+
+    const g = new Grid(el, [], COLUMNS);
+    grid.set(g);
+
+    loading.set(true);
+    generateRows(rowsNum.get(), g, () => loading.set(false));
+
+    const sc = new AutoScroller(g);
+    scroller.set(sc);
+    (window as any).__grid = g;
+
+    return () => g.destroy();
+  }, [containerRef.get(), rowsNum.get()]);
+
+  AutumnEffect(() => {
+    const g = grid.get();
+    if (!g || !stress.get()) return;
+    const id = setInterval(() => {
+          // 👇 Clean boot-style logs
+      console.log("%c[Signal] Filter pulse", "color:#9c27b0;font-weight:bold;");
+      console.log("%c[Scheduler] Recompute queued", "color:#1976d2;font-weight:bold;");
+      console.log("%c[Renderer] Commit complete", "color:#e53935;font-weight:bold;");
+      const f = g.rowManager.view.filter;
+      if (!f[4] || f[4].length < 5) f[4] = (f[4] ?? "") + Math.floor(Math.random() * 10);
+      else delete f[4];
+      g.rowManager.runFilter();
+    }, 100);
+    return () => clearInterval(id);
+  }, [grid.get(), stress.get()]);
+
+  AutumnEffect(() => {
+    const sc = scroller.get();
+    if (!sc || speed.get() === 0) return;
+    sc.start(Math.exp(speed.get() / 15));
+  }, [scroller.get(), speed.get()]);
+
+  return (
+    <div className="w-screen h-screen flex flex-col bg-gray-50 relative">
+      <Analytics />
+      <SignalMap speed={speed} />
+      <PerformanceOverlay />
+      <ReactiveConsole />
+
+      <div className="p-2 flex flex-wrap gap-2 items-center z-20">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium">Scroll speed:</span>
+          <input type="range" min={0} max={100} value={speed.get()} onChange={e => speed.set(Number(e.target.value))}
+            className={clsx("h-2 w-40 cursor-pointer rounded-full bg-gray-300")} />
+        </div>
+
+        <button className={clsx(
+          "h-8 px-3 rounded text-white hover:scale-95 transition-all",
+          stress.get() ? "bg-red-500 hover:bg-red-600" : "bg-blue-500 hover:bg-blue-600"
+        )} onClick={() => stress.set(!stress.get())}>
+          {stress.get() ? "Stress Test ON" : "Stress Test OFF"}
+        </button>
+
+        <select value={rowsNum.get()} onChange={e => rowsNum.set(Number(e.target.value))}
+          className="h-8 rounded border border-gray-700 bg-white px-2 text-sm">
+          {[10,10_000,100_000,200_000,500_000,1_000_000,2_000_000,5_000_000,10_000_000].map(v =>
+            <option key={v} value={v}>{v.toLocaleString()} rows</option>
+          )}
+        </select>
+      </div>
+
+      <div ref={el => containerRef.set(el)}
+        style={{ flex: 1, contain: "strict" }}
+        className={clsx(
+          "relative w-full overflow-clip border border-gray-700 bg-white shadow-inner",
+          loading.get() && "pointer-events-none opacity-70"
+        )}
+      />
+    </div>
+  );
+});

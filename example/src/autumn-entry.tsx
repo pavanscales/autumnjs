@@ -20,7 +20,6 @@ function showAutumnBootLog() {
   );
 }
 
-/* 📊 System-style runtime logs */
 function showAutumnSystemLogs() {
   const styleInfo = "color:#00bcd4;font-weight:bold";
   const styleDebug = "color:#8bc34a;font-weight:bold";
@@ -42,7 +41,6 @@ function showAutumnSystemLogs() {
   );
 }
 
-/* 🚫 Disable React DevTools + silence console in PROD */
 if (import.meta.env.PROD) {
   try {
     Object.defineProperty(window as any, "__REACT_DEVTOOLS_GLOBAL_HOOK__", {
@@ -56,7 +54,6 @@ if (import.meta.env.PROD) {
     /* ignore */
   }
 
-  // Silence *all* console output in production EXCEPT our banner + system logs
   const origLog = console.log.bind(console);
   console.log = (...args: any[]) => {
     if (
@@ -73,7 +70,6 @@ if (import.meta.env.PROD) {
   console.info = console.warn = console.error = () => {};
 }
 
-/* 🎛 Filter noisy logs in DEV, but keep our fake arch logs */
 if (!import.meta.env.PROD) {
   const origLog = console.log.bind(console);
   const origInfo = console.info.bind(console);
@@ -107,11 +103,9 @@ if (!import.meta.env.PROD) {
   console.warn = wrap(origWarn);
   console.error = wrap(origErr);
 
-  // 🔥 Show boot log & system logs in dev
   showAutumnBootLog();
   showAutumnSystemLogs();
 
-  // 🕹 Secret dev toggle: Ctrl+Shift+D → enable/disable logs
   window.addEventListener("keydown", (e) => {
     if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "d") {
       logsEnabled = !logsEnabled;
