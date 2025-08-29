@@ -104,11 +104,44 @@ function reactiveSignal<T>(initial: T, layerName: string) {
   };
   return s;
 }
-
 // ---------------- SIGNAL PARTICLE MAP ----------------
 const SignalMap = AutumnComponent(({ speed }: { speed: ReturnType<typeof useAutumnSignal<number>> }) => {
   const canvasRef = useAutumnSignal<HTMLCanvasElement | null>(null);
+  const pos = useAutumnSignal({ x: 16, y: 16 }); // 🔥 track position
+  const dragging = useAutumnSignal(false);
+  const offset = useAutumnSignal({ x: 0, y: 0 });
 
+  // ---- 🎯 Dragging system ----
+  AutumnEffect(() => {
+    const el = canvasRef.get();
+    if (!el) return;
+
+    const onMouseDown = (e: MouseEvent) => {
+      dragging.set(true);
+      offset.set({ x: e.clientX - pos.get().x, y: e.clientY - pos.get().y });
+      e.preventDefault();
+    };
+    const onMouseUp = () => dragging.set(false);
+    const onMouseMove = (e: MouseEvent) => {
+      if (!dragging.get()) return;
+      pos.set({
+        x: e.clientX - offset.get().x,
+        y: e.clientY - offset.get().y
+      });
+    };
+
+    el.addEventListener("mousedown", onMouseDown);
+    window.addEventListener("mouseup", onMouseUp);
+    window.addEventListener("mousemove", onMouseMove);
+
+    return () => {
+      el.removeEventListener("mousedown", onMouseDown);
+      window.removeEventListener("mouseup", onMouseUp);
+      window.removeEventListener("mousemove", onMouseMove);
+    };
+  }, [canvasRef.get(), dragging.get()]);
+
+  // ---- 🌌 Particle animation ----
   AutumnEffect(() => {
     const canvas = canvasRef.get();
     if (!canvas) return;
@@ -180,14 +213,15 @@ const SignalMap = AutumnComponent(({ speed }: { speed: ReturnType<typeof useAutu
       height={200}
       style={{
         position: "fixed",
-        bottom: 16,
-        right: 16,
+        left: pos.get().x,
+        top: pos.get().y,
         zIndex: 9999,
         borderRadius: "12px",
         background: "rgba(0,0,0,0.85)",
         pointerEvents: "auto",
         boxShadow: "0 0 16px rgba(0,255,200,0.7)",
-        cursor: "move"
+        cursor: "move",
+        transition: dragging.get() ? "none" : "left 0.1s ease, top 0.1s ease" // 🔥 smooth snap feel
       }}
     />
   );
