@@ -41,12 +41,4 @@
 │ - Typed arrays → dense, predictable memory layout             │
 │ - Off-thread heavy computations (sort, filter, layout)        │
 └───────────────────────────────────────────────────────────────┘
-                   │
-                   ▼
-┌───────────────────────────────────────────────────────────────┐
-│                  Platform / Drivers Layer                      │
-│ - DOM / Canvas / WebGPU / future Native drivers              │
-│ - Cross-platform abstraction → zero rewrite needed           │
-│ - Input mapping & event handling → 100% precision            │
-│ - Fully extensible → plug-in GPU/native drivers as needed    │
-└───────────────────────────────────────────────────────────────┘
+                
