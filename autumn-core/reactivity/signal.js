@@ -1,13 +1,6 @@
-// /autmn-core/reactivity/signal.js
-// ULTRA-GOD TIER REACTIVE CORE v3.0
-// Atomic signals + DAG + lazy computed + nested batching + memory safe + prioritized effects
-
 let CURRENT_EFFECT = null;
 let BATCH_DEPTH = 0;
 
-// ====================
-// TASK QUEUE WITH PRIORITY
-// ====================
 class TaskQueue {
   constructor() {
     this.queue = [];
@@ -18,21 +11,29 @@ class TaskQueue {
     if (!task._enqueued) {
       task._enqueued = true;
       this.queue.push(task);
-      this._schedule();
-    }
-  }
-
-  _schedule() {
-    if (!this.scheduled && BATCH_DEPTH === 0) {
-      this.scheduled = true;
-      queueMicrotask(() => this._flush());
+      if (!this.scheduled && BATCH_DEPTH === 0) {
+        this.scheduled = true;
+        queueMicrotask(() => this._flush());
+      }
     }
   }
 
   _flush() {
     this.scheduled = false;
-    // sort by priority descending
-    this.queue.sort((a, b) => b._priority - a._priority);
+    if (this.queue.length === 0) return;
+
+    if (this.queue.length > 1) {
+      // insertion sort is faster for small queues
+      for (let i = 1; i < this.queue.length; i++) {
+        let j = i, t = this.queue[i];
+        while (j > 0 && this.queue[j - 1]._priority < t._priority) {
+          this.queue[j] = this.queue[j - 1];
+          j--;
+        }
+        this.queue[j] = t;
+      }
+    }
+
     const q = this.queue;
     for (let i = 0; i < q.length; i++) {
       const t = q[i];
@@ -45,9 +46,6 @@ class TaskQueue {
 
 const GLOBAL_QUEUE = new TaskQueue();
 
-// ====================
-// SIGNAL
-// ====================
 export class Signal {
   constructor(value) {
     this._value = value;
@@ -60,15 +58,12 @@ export class Signal {
   }
 
   set(next) {
-    if (Object.is(this._value, next)) return;
+    if (this._value === next || (Number.isNaN(this._value) && Number.isNaN(next))) return;
     this._value = next;
     for (const eff of this._subs) eff._markDirty();
   }
 }
 
-// ====================
-// EFFECT
-// ====================
 export class Effect {
   constructor(fn, options = {}) {
     this.fn = fn;
@@ -79,7 +74,6 @@ export class Effect {
     this.active = true;
     this._enqueued = false;
     this._lazy = !!options.lazy;
-
     if (!this._lazy) this._run();
   }
 
@@ -98,15 +92,16 @@ export class Effect {
     if (!this.active || !this._dirty) return;
     this._dirty = false;
 
-    // cleanup previous deps
     for (const s of this.deps) s._subs.delete(this);
     this.deps.clear();
 
     const prev = CURRENT_EFFECT;
     CURRENT_EFFECT = this;
-    try { this.fn(); } 
-    catch(e) { console.error("[Autmn-Core Effect]", e); } 
-    finally {
+    try {
+      this.fn();
+    } catch (e) {
+      console.error("[Autmn-Core Effect]", e);
+    } finally {
       CURRENT_EFFECT = prev;
       for (const s of this.deps) s._subs.add(this);
     }
@@ -121,9 +116,6 @@ export class Effect {
   }
 }
 
-// ====================
-// COMPUTED
-// ====================
 export class Computed {
   constructor(getter, options = {}) {
     this._getter = getter;
@@ -144,9 +136,6 @@ export class Computed {
   }
 }
 
-// ====================
-// TRANSACTIONS / BATCH
-// ====================
 export function batch(fn) {
   BATCH_DEPTH++;
   try { fn(); } finally {
@@ -155,15 +144,14 @@ export function batch(fn) {
   }
 }
 
-// ====================
-// DEV METRICS
-// ====================
-export function signalStats(signal) { return { subscribers: signal._subs.size }; }
-export function effectStats(effect) { return { deps: effect.deps.size, dirty: effect._dirty, active: effect.active }; }
+export function signalStats(signal) { 
+  return { subscribers: signal._subs.size }; 
+}
 
-// ====================
-// SHORTCUTS
-// ====================
+export function effectStats(effect) { 
+  return { deps: effect.deps.size, dirty: effect._dirty, active: effect.active }; 
+}
+
 export function signal(value) { return new Signal(value); }
 export function effect(fn, opts) { return new Effect(fn, opts); }
 export function computedSignal(getter, opts) { return new Computed(getter, opts); }
