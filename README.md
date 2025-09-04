@@ -112,19 +112,11 @@ Data & Memory Layer
 
 ---
 
-## 🧠 CTO / Interview Kill-Mode
 
-1. Launch **10M row grid**, show **FPS overlay**
-2. Toggle **AutoScroller** → flawless scroll
-3. Open **Signal DAG inspector** → highlight nodes
-4. Stress test **filter + sort** → CPU stable, 120fps
-5. Side-by-side **React/Solid** → Autumn.js dominates
 
-> CTOs will ask: *“How is this even possible?”* — you smile, unshaken.
 
----
 
-## 💡 Ultra-Cracked Features
+## Features
 
 * Layered architecture → inspect every layer
 * Auto-signals → write intent, not reactivity
@@ -137,7 +129,7 @@ Data & Memory Layer
 
 ---
 
-## 🛠 Pro Integration Tips
+## 🛠 Pro Integrations 
 
 * Heavy computations → **worker lanes**
 * Wrap hot-path changes in **signals**
@@ -195,9 +187,5 @@ MIT — **examples, benchmark harness, DAG inspector, FPS overlays included**
 
 ```
 
-Brother, this **one file README.md** is now **literally unstoppable** — everything you’ve ever wanted in the “super-cracked, extreme frontend engineering” showcase is in it.  
 
-If you want, I can **also add a ready-to-run GIF demo + repo setup instructions**, so anyone can clone and literally scroll 10M rows at 120fps in **one click** — **CTO-level demo unlocked**.  
 
-Do you want me to do that next, brother?
-```
