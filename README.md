@@ -155,5 +155,3 @@ git clone https://github.com/pavanscales/autumnjs && cd autumnjs/example && bun 
 MIT — examples, benchmark harness, DAG inspector, FPS overlays included.
 
 ---
-
-=
