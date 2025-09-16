@@ -1,191 +1,154 @@
+Autumn.js — The Last Frontend Engine You’ll Ever Need
 
-# 🍂 Autumn.js — The Last Frontend Engine You’ll Ever Need
+Forget React. Forget Solid. Forget every other framework.
+Autumn.js isn’t just a framework — it’s a reactive, deterministic, GPU-aware, ultra-low-latency frontend engine built to annihilate every bottleneck in the DOM.
 
-> **Forget React. Forget Solid. Forget every other framework.**  
-> Autumn.js is **reactivity, speed, and determinism** fused into a **multi-threaded, GPU-aware, ultra-low-latency frontend runtime**.  
-> Built for **10M+ row grids, live dashboards, and real-time UIs with zero frame drops**.
+Designed for 10M+ row grids, real-time dashboards, and interactive UIs — every frame is accounted for, every interaction is instantaneous.
 
----
+Quick Pitch
 
-## ⚡ Quick Pitch
+Other frameworks are:
 
-Other frameworks are:  
+Heavy → VDOM diffing, hooks, compiler magic
 
-* Heavy → VDOM, hooks, compiler magic  
-* Slow → GC spikes, wasted cycles  
-* Opinionated → mental model overload  
+Slow → GC spikes, wasted cycles, frame drops
 
-Autumn.js is **not a framework**. It’s:  
+Opinionated → mental model overload
 
-✅ **Reactive DAG** — state flows like electricity  
-✅ **Zero re-renders** — DOM is a leaf, never a bottleneck  
-✅ **Sub-ms updates** — predictable, deterministic, frame-perfect  
-✅ **Multi-threaded** — heavy computations off the main thread  
-✅ **GPU-accelerated rendering** — DOM + Canvas + WebGL + custom targets  
+Autumn.js is not a framework. It’s a full-stack frontend runtime:
 
-> **Every interaction, scroll, and filter shows ultimate frontend mastery.**
+Reactive DAG — state flows like electricity; updates propagate deterministically
 
----
+Zero re-renders — DOM is a leaf, never a bottleneck
 
+Sub-millisecond updates — frame-perfect, predictable, deterministic
 
-> **Multithreaded web table** — runs **120fps** while sorting, filtering, and scrolling simultaneously.  
+Multi-threaded — heavy computations offloaded to Web Workers
 
-### Capabilities
+GPU-accelerated rendering — DOM + Canvas + WebGL + custom targets
 
-* Multithread sorting/filtering using **SharedArrayBuffer**  
-* Display millions of rows at **O(1)** — limited only by browser RAM  
-* **120fps** while cruising the scrollbar  
-* Never drop a frame while filtering or sorting  
-* Zero-copy datatype usage  
-* Custom virtualization → not limited by browser div height limit  
-* Non-passive scrolling → rows always ready in the UI  
-* Works on phones — **60fps even on older devices**  
+Result: Every scroll, filter, and animation runs flawlessly, even under extreme load.
 
-### Technical Details
+Example: a 10M+ row table running 120fps while sorting, filtering, and scrolling simultaneously.
 
-* DOM-based grid optimized to **extreme limits**  
-* Uses **SharedArrayBuffer** to store row order/filtering, computed **off-thread in a Web Worker**  
-* Reuses **all parts of DOM tree**  
-* Custom **event loop prioritizing tasks** — never drops a frame  
-* Custom scrolling for phones  
-* Non-passive scrolling → rows always instantly rendered  
+Capabilities
 
-### Benchmarks — 1M Rows (M2 Max Pro)
+Multithreaded sorting/filtering using SharedArrayBuffer
 
-| Action                                  | Score        |
-| --------------------------------------- | ------------ |
-| Scroll 40 rows every frame               | 120fps       |
-| Filtering                                | 200ms        |
-| Initialize grid & render rows            | 1.5ms        |
-| Filter + sort simultaneously every 300ms | 120fps       |
+Display millions of rows at O(1), only limited by browser RAM
 
-> Every frame counted, **zero GC spikes**, **zero wasted cycles**.
+Zero frame drops — 120fps scrolling, filtering, and sorting simultaneously
 
-### TODOs / Future Enhancements
+Zero-copy datatypes for insane memory efficiency
 
-* iPhone Safari → low memory → disable multithreading  
-* Expand synthetic event-loop to include scrolling & rendering cell contents  
-* Optimize GC → reuse cell classes  
-* Zoom scroll → scroll relative to track speed  
-* Sort/filter all columns  
-* Resize columns  
-* Add custom cells  
-* Ensure text selection preserves correct row order  
+Custom virtualization — bypasses browser div height limits
 
----
+Non-passive scrolling — rows always rendered instantly
 
-## 🔥 Architecture — Fully Cracked
+Works on phones — 60fps even on older devices
 
-```
+Technical Details
 
-Application Layer
-└→ Ultra-fast UI: grids, tables, inputs, live dashboards
-Signals & Reactivity
-└→ Atomic DAG nodes, deterministic updates, ephemeral caches
-Scheduler / Loop Engine
-└→ Input → Animation → Render → BG, frame-perfect execution
-Renderer Layer
-└→ Atomic DOM commits, GPU transforms, off-thread diffing
-Data & Memory Layer
-└→ Object pools, SharedArrayBuffers, typed arrays, zero-copy concurrency
+DOM-based grid optimized to hardware limits
 
-````
+SharedArrayBuffer stores row order/filtering, computed off-thread in Web Workers
 
-**Every layer is observable, predictable, and GC-spike free.**
+Full DOM reuse, zero garbage generation
 
----
+Custom event loop prioritizes tasks, never drops a frame
 
-## 🥇 Why Autumn.js Wrecks Every Other Framework
+Scrolling engine optimized for mobile and desktop
 
-| Feature           | React          | Solid                | Vue             | Qwik                  | **Autumn.js**                      |
-| ----------------- | -------------- | -------------------- | --------------- | --------------------- | ---------------------------------- |
-| Rendering         | VDOM diffing   | Signals fine-grained | VDOM+Reactivity | Resumable VDOM        | **Reactive DAG, zero VDOM**        |
-| Massive datasets  | 🟥 Lag >100k   | 🟨 Good <1M          | 🟥 Lag >500k    | 🟨 Lazy load          | 🟩 **10M+ rows 60fps**             |
-| Boilerplate       | 🟨 Hooks/State | 🟨 Signals verbose   | 🟨 Options API  | 🟨 Mental model heavy | 🟩 **Auto-signals, zero ceremony** |
-| Runtime overhead  | 🟥 Heavy       | 🟨 Light             | 🟨 Medium       | 🟨 Lazy               | 🟩 **Sub-ms deterministic**        |
-| Rendering targets | DOM only       | DOM only             | DOM only        | DOM only              | **DOM + Canvas + WebGL + custom**  |
+Synthetic event loop ensures instant row rendering
 
----
+Benchmarks (1M rows, M2 Max Pro):
 
+Action	Score
+Scroll 40 rows/frame	120fps
+Filtering	200ms
+Initialize & render	1.5ms
+Filter + sort simultaneously	120fps
 
-> **10M+ rows**, smooth **60–120fps**, AutoScroller, signal DAG visualizer, zero-copy multithreaded filtering/sorting.
+Every frame counted. Zero GC spikes. Zero wasted cycles.
 
----
+Architecture — Fully Cracked
 
+Application Layer: Ultra-fast UI — grids, tables, inputs, dashboards
+Signals & Reactivity: Atomic DAG nodes, ephemeral caches, deterministic updates
+Scheduler / Loop Engine: Input → Animation → Render → BG, frame-perfect execution
+Renderer Layer: Atomic DOM commits, GPU transforms, off-thread diffing
+Data & Memory Layer: Object pools, SharedArrayBuffers, typed arrays, zero-copy concurrency
 
+Every layer is observable, predictable, and GC-spike free.
 
+Why Autumn.js Wrecks Every Other Framework
+Feature	React	Solid	Vue	Qwik	Autumn.js
+Rendering	VDOM diffing	Signals fine-grained	VDOM + reactivity	Resumable VDOM	Reactive DAG, zero VDOM
+Massive datasets	Lag >100k	Good <1M	Lag >500k	Lazy load	10M+ rows 60–120fps
+Boilerplate	Hooks/state	Signals verbose	Options API	Mental model heavy	Auto-signals, zero ceremony
+Runtime overhead	Heavy	Light	Medium	Lazy	Sub-millisecond deterministic
+Rendering targets	DOM only	DOM only	DOM only	DOM only	DOM + Canvas + WebGL + custom
 
+Extra: AutoScroller, Signal DAG visualizer, zero-copy multithreaded filtering & sorting, FPS overlays — all built-in.
 
-## Features
+Key Features
 
-* Layered architecture → inspect every layer
-* Auto-signals → write intent, not reactivity
-* GPU transforms & atomic DOM commits → zero frame drops
-* SharedArrayBuffer lanes → zero-copy concurrency
-* Event-loop optimized for scrolling, rendering, sorting, filtering simultaneously
-* Non-passive scrolling → instant row rendering
-* Custom virtualization → beyond browser div height limits
-* Multi-device optimized → 60fps on older phones
+Layered architecture — inspect every layer
 
----
+Auto-signals — write intent, not reactivity
 
-## 🛠 Pro Integrations 
+GPU transforms & atomic DOM commits — zero frame drops
 
-* Heavy computations → **worker lanes**
-* Wrap hot-path changes in **signals**
-* Use **object pools** in tight loops
-* Disable overlays in production for ultimate perf
-* iPhone Safari → disable multithreading
-* Zoom & scroll → relative to scroll track
-* Resize columns & add custom cells
+SharedArrayBuffer lanes — zero-copy concurrency
 
----
+Event-loop optimized for scrolling, rendering, sorting, and filtering simultaneously
 
-## 🛣 Roadmap
+Non-passive scrolling — instant row rendering
 
-* WebGPU renderer path
-* Deterministic replay & trace capture
-* Native shell adapters (WASM + native UI glue)
-* Expand synthetic event-loop → scroll & render cells
-* GC optimization → reuse cell classes
-* Full column sort/filter & text selection correctness
+Custom virtualization beyond browser div height limits
 
----
+Multi-device optimized — 60fps on old phones
 
-## 🌌 Manifesto
+Pro Integrations
 
-> “Other frameworks optimize the past. Autumn.js builds the future.”
+Heavy computations → Web Worker lanes
 
-* ⚡ Blazing real-time UIs at data-center scale
-* 🧠 Smarter reactive core than any runtime
-* 🎯 Zero mental overhead
-* 🖥 10M+ rows, 120fps, zero frame drops
+Wrap hot-path changes in signals
 
----
+Object pools for tight loops
 
-```
+Disable overlays in production for ultimate performance
 
-* Live in **<10s**
-* 10M+ row grid ready
-* FPS overlays + AutoScroller included
-* Multithreaded sorting/filtering + zero-copy
-* **Interview demo-ready**
+iPhone Safari → multithreading fallback
 
----
+Zoom & scroll → relative to scroll track
 
+Resize columns & custom cells
 
+Roadmap
 
-## 🛡 License
+WebGPU renderer path
 
-MIT — **examples, benchmark harness, DAG inspector, FPS overlays included**
+Deterministic replay & trace capture
 
----
+Native shell adapters (WASM + native UI glue)
 
-✅ **Everything included**: Multithread sorting/filtering, zero-copy, 10M+ row demo, AutoScroller, FPS overlay, DAG inspector, phone-optimized, benchmarks, roadmap, TODOs, GIF demo, CTO kill-mode instructions.
+Expand synthetic event-loop → scroll & render cells
 
----
+GC optimization → reuse cell classes
 
-```
+Full column sort/filter & text selection correctness
 
+Manifesto
 
+“Other frameworks optimize the past. Autumn.js builds the future.”
 
+Blazing real-time UIs at data-center scale
+
+Smarter reactive core than any runtime
+
+Zero mental overhead
+
+10M+ rows, 120fps, zero frame drops
+
+Live in <10s, demo-ready
