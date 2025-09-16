@@ -35,7 +35,7 @@ Capabilities
 
 Multithreaded sorting/filtering using SharedArrayBuffer
 
-Display millions of rows at O(1), only limited by browser RAM
+Display millions of rows at O(1), limited only by browser RAM
 
 Zero frame drops — 120fps scrolling, filtering, and sorting simultaneously
 
@@ -74,9 +74,13 @@ Every frame counted. Zero GC spikes. Zero wasted cycles.
 Architecture — Fully Cracked
 
 Application Layer: Ultra-fast UI — grids, tables, inputs, dashboards
+
 Signals & Reactivity: Atomic DAG nodes, ephemeral caches, deterministic updates
+
 Scheduler / Loop Engine: Input → Animation → Render → BG, frame-perfect execution
+
 Renderer Layer: Atomic DOM commits, GPU transforms, off-thread diffing
+
 Data & Memory Layer: Object pools, SharedArrayBuffers, typed arrays, zero-copy concurrency
 
 Every layer is observable, predictable, and GC-spike free.
@@ -89,7 +93,7 @@ Boilerplate	Hooks/state	Signals verbose	Options API	Mental model heavy	Auto-sign
 Runtime overhead	Heavy	Light	Medium	Lazy	Sub-millisecond deterministic
 Rendering targets	DOM only	DOM only	DOM only	DOM only	DOM + Canvas + WebGL + custom
 
-Extra: AutoScroller, Signal DAG visualizer, zero-copy multithreaded filtering & sorting, FPS overlays — all built-in.
+Extras: AutoScroller, Signal DAG visualizer, zero-copy multithreaded filtering & sorting, FPS overlays — all built-in.
 
 Key Features
 
@@ -138,6 +142,24 @@ Expand synthetic event-loop → scroll & render cells
 GC optimization → reuse cell classes
 
 Full column sort/filter & text selection correctness
+
+Installation & Demo
+
+
+# Clone repo
+git clone https://github.com/pavanscales/autumnjs
+cd autumnjs/example
+
+# Install dependencies
+bun install       # or npm install / yarn install
+
+# Run demo
+bun run dev
+
+The example folder runs the full autumn-core engine under the hood. Core is modular, lightweight, and fully powers all reactive DAGs, zero-copy concurrency, and GPU-accelerated rendering.
+
+
+
 
 Manifesto
 
